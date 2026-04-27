@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minha Torre de Hanói</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3498db">
+
+</head>
+<body>
+    <h1><strong>Torre de Hanói</strong></h1>
+    <div id="notificacao">Aqui vai a notificação!</div>
+
+    <div id="configuracoes">
+    <label>Discos: <input type="number" id="numDiscos" value="3" min="3" max="10"></label>
+    <label><input type="checkbox" id="usarCronometro"> Cronômetro</label>
+    <button onclick="reiniciarJogo()">Novo Jogo</button>
+</div>
+
+<div id="estatisticas" style="margin: 10px; font-weight: bold;">
+    Movimentos: <span id="contador-movimentos">0</span> | 
+    Objetivo Mínimo: <span id="objetivo-minimo">7</span>
+</div>
+
+<div id="display-tempo" style="display: none; margin: 10px;">
+    Tempo: <span id="segundos">0</span>s
+</div>
+    <div id="container-tabuleiro">
+        <div id="tabuleiro">
+            <div class="pino" id="pinoA" onclick="clicarPino('A')"></div>
+            <div class="pino" id="pinoB" onclick="clicarPino('B')"></div>
+            <div class="pino" id="pinoC" onclick="clicarPino('C')"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+
+    <script>
+        let novoWorker;
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+            .then(registro => {console.log("Trabalhador de fundo registrado com sucesso!");
+                regirtro.addEventListener('updatefound', () => {
+                    novoWorker = registro.installing;
+                    console.log("Novo trabalhador de fundo encontrado!");
+                    novoWorker.addEventListener('statechange', () => {
+                        if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            mostrarAvisoDeAtualizacao();
+                            // Opcional: notificar o usuário que uma nova versão está disponível
+                            // alert("Nova versão disponível! Por favor, recarregue a página.");
+                        }
+                    });
+                });
+            }).catch(erro => console.log("Erro no SW:", erro));
+
+            // Quando o novo worker assumir o controle, recarrega a página automaticamente
+            let atualizando;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (atualizando) return;
+                atualizando = true;
+                window.location.reload();
+            });
+        }
+
+        // Função que usa o seu sistema de notificação para oferecer a atualização
+        function mostrarAvisoDeAtualizacao() {
+            const notif = document.getElementById("notificacao");
+            // Adiciona a mensagem e um botão chamativo de atualizar
+            notif.innerHTML = `
+                Nova versão disponível! <br><br>
+                <button onclick="aceitarAtualizacao()" style="padding: 10px 20px; font-size: 16px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Atualizar Agora
+                </button>
+            `;
+            notif.classList.add("mostrar");
+            
+            // Removemos o clique para fechar, forçando o usuário a atualizar ou ignorar
+            document.removeEventListener('click', esconderNotificacao);
+        }
+
+        function aceitarAtualizacao() {
+            if (novoWorker) {
+                // Envia a mensagem para o sw.js executar o "self.skipWaiting()"
+                novoWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+        }
+    </script>
+</body>
+</html>

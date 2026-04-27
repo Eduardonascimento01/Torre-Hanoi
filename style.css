@@ -1,0 +1,104 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f0f0f0;
+}
+#container-tabuleiro {
+    width: 100%;
+    overflow-x: hidden;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#tabuleiro {
+    display: flex; 
+    justify-content: center;
+    gap: 50px; 
+    
+}
+
+.pino {
+    width: 170px;
+    height: 250px; 
+    background-color: transparent; 
+    border-bottom: 10px solid #333; 
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    position: relative; 
+    z-index: 1;  
+}
+
+.pino::after {
+    content: ""; 
+    position: absolute;
+    bottom: 0; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 15px; 
+    height: 100%; 
+    background-color: #8c2828; 
+    border-radius: 5px 5px 0 0; 
+    z-index: 0; 
+}
+
+.disco {
+    height: 20px; /* Diminuímos a altura para caber 10 */
+    background-color: #3498db;
+    border-radius: 5px;
+    margin-bottom: 1px;
+    border: 1px solid rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 10;
+    transition: all 0.2s; /* Adiciona uma animação suave ao mover */
+}
+
+.pino.selecionado {
+    background-color: rgba(0, 0, 0, 0.05); /* Fundo um pouco mais escurinho */
+    border-bottom: 10px solid #3498db; /* Base azul */
+}
+#configuracoes {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#configuracoes label, #configuracoes button {
+    margin: 0 10px;
+    cursor: pointer;
+}
+
+input[type="number"] {
+    width: 40px;
+}
+
+#notificacao {
+    position: fixed; /* Fica fixo na tela mesmo se rolar a página */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centraliza perfeitamente */
+    background-color: rgba(44, 62, 80, 0.95); /* Azul escuro quase preto */
+    color: white;
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 9999; /* Fica por cima de absolutamente tudo */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+    cursor: pointer; /* Muda o mouse para uma mãozinha */
+    
+    /* A mágica da animação de sumir e aparecer */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#notificacao.mostrar {
+    opacity: 1;
+    visibility: visible;
+}
