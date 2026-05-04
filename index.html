@@ -3,61 +3,785 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minha Torre de Hanói</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Torre de Hanói</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3498db">
+    <meta name="theme-color" content="#1a1a2e">
+    <style>
+        :root {
+            --bg: #0f0f1a;
+            --card: #1a1a2e;
+            --accent: #3498db;
+            --accent2: #2980b9;
+            --gold: #f5c518;
+            --text: #eee;
+            --pin: #53354a;
+            --shadow-azul: rgba(52, 152, 219, 0.6);
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(1.5px 1.5px at 50% 30%, rgba(255, 255, 255, 0.25), transparent),
+                radial-gradient(1px 1px at 70% 50%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(1.5px 1.5px at 90% 10%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(1px 1px at 20% 90%, rgba(255, 255, 255, 0.15), transparent),
+                radial-gradient(1px 1px at 80% 80%, rgba(255, 255, 255, 0.2), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        h1 {
+            margin: 25px 0 5px;
+            font-size: clamp(1.5rem, 5vw, 2.4rem);
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #3498db, #f5c518);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        /* Notificações */
+        #notificacao {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            background: linear-gradient(135deg, #1a1a2e, #0f3460);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-weight: 600;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 2px var(--shadow-azul);
+            z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            max-width: 90vw;
+        }
+        #notificacao.mostrar {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Modal vitória */
+        #vitoria-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+            z-index: 2000; justify-content: center; align-items: center; flex-direction: column;
+        }
+        #vitoria-overlay.mostrar { display: flex; }
+        #vitoria-box {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid var(--gold); border-radius: 30px; padding: 40px 30px;
+            text-align: center; box-shadow: 0 0 50px rgba(245, 197, 24, 0.4);
+            max-width: 90vw; width: 340px;
+        }
+        #vitoria-box h2 {
+            font-size: 2.2rem; margin-bottom: 10px;
+            background: linear-gradient(135deg, #f5c518, #3498db);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        #vitoria-box p { font-size: 1.1rem; margin: 10px 0 20px; color: #ddd; }
+        #vitoria-box button {
+            padding: 14px 30px; font-size: 1.1rem; font-weight: 700;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border: none; border-radius: 30px; color: #fff; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.5); transition: all 0.3s; letter-spacing: 1px;
+        }
+        #vitoria-box button:hover { background: linear-gradient(135deg, #2980b9, #1c6ea4); transform: scale(1.05); }
+
+        /* Configurações */
+        #configuracoes {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
+            margin: 15px 10px; background: rgba(26, 26, 46, 0.7); padding: 14px 20px;
+            border-radius: 50px; backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); position: relative; z-index: 2;
+        }
+        #configuracoes label { color: #ccc; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        #numDiscos {
+            width: 65px; padding: 12px 6px; border-radius: 25px; border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 15, 26, 0.8); color: #fff; text-align: center; font-size: 1.2rem; font-weight: bold; transition: all 0.3s;
+        }
+        #numDiscos:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 15px var(--shadow-azul); }
+        #usarCronometro { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+        #configuracoes button, #configuracoes .btn-tutorial {
+            padding: 10px 18px; border: none; border-radius: 30px; cursor: pointer; font-weight: 700;
+            font-size: 0.95rem; letter-spacing: 1px; transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-novo { background: linear-gradient(135deg, #e94560, #c0392b); color: #fff; box-shadow: 0 4px 15px rgba(233, 68, 96, 0.4); }
+        .btn-novo:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(233, 68, 96, 0.6); }
+        .btn-voltar { background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); }
+        .btn-voltar:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(243, 156, 18, 0.6); }
+        .btn-tutorial { background: var(--accent); color: #fff; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 4px 15px var(--shadow-azul); padding: 0; }
+        .btn-tutorial:hover { background: #2980b9; transform: scale(1.1); }
+        button:active { transform: scale(0.95) !important; }
+
+        /* Estatísticas */
+        #estatisticas {
+            display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; align-items: center;
+            background: rgba(26, 26, 46, 0.6); padding: 10px 24px; border-radius: 30px; font-weight: 600;
+            font-size: 1rem; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); position: relative; z-index: 2;
+        }
+        #estatisticas span { color: var(--gold); font-weight: 800; font-size: 1.2rem; margin-left: 4px; }
+        #display-tempo {
+            background: rgba(26, 26, 46, 0.6); padding: 8px 20px; border-radius: 20px; font-weight: 600;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); position: relative; z-index: 2;
+        }
+        #display-tempo span { color: #16c79a; font-weight: 800; }
+
+        /* ================= O NOVO TABULEIRO ================= */
+        #container-tabuleiro {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        #tabuleiro {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Espaço entre os quadrados */
+            align-items: flex-end;
+            min-height: 300px;
+            position: relative;
+            /* O fundo compartilhado foi removido para focar nos quadrados individuais */
+        }
+
+        /* Cada Pino agora é o Quadrado/Container */
+        .pino {
+            position: relative;
+            z-index: 3;
+            background: rgba(20, 20, 40, 0.5);
+            border-radius: 20px;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            /* Espaço exato embaixo para o primeiro disco não cobrir a base */
+            padding-bottom: 24px; 
+        }
+
+        /* A Haste do pino (agora desenhada usando pseudo-elemento) */
+        .pino::before {
+            content: '';
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: var(--haste-altura, calc(100% - 30px));
+            background: linear-gradient(180deg, #8b6b7a 0%, #53354a 60%, #3d2633 100%);
+            border-radius: 10px 10px 2px 2px;
+            z-index: 1;
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* A Base do pino */
+        .pino::after {
+            content: '';
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%; /* Ocupa 80% da largura do quadrado */
+            height: 12px;
+            background: linear-gradient(180deg, #8b6b7a, #53354a);
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            z-index: 1;
+        }
+
+        .pino:hover {
+            box-shadow: 0 8px 30px var(--shadow-azul), 0 0 0 2px var(--shadow-azul);
+            background: rgba(30, 30, 50, 0.6);
+        }
+        
+        .pino.selecionado, .pino.drag-over {
+            box-shadow: 0 0 0 3px var(--accent), 0 0 25px var(--shadow-azul);
+            background: rgba(40, 40, 70, 0.7);
+        }
+
+        /* Discos */
+        .disco {
+            height: 24px;
+            border-radius: 20px;
+            margin-bottom: 2px;
+            position: relative;
+            z-index: 6; /* Garante que fica à frente da haste */
+            transition: all 0.15s ease-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+            cursor: grab;
+        }
+        .disco:active {
+            cursor: grabbing;
+        }
+
+        /* Modal do tutorial */
+        #tutorial-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px);
+            z-index: 3000; justify-content: center; align-items: center; flex-direction: column;
+        }
+        #tutorial-overlay.mostrar { display: flex; }
+        .tutorial-box {
+            background: #1a1a2e; border-radius: 30px; padding: 30px; max-width: 90vw; width: 380px;
+            text-align: center; box-shadow: 0 0 40px var(--shadow-azul); border: 2px solid var(--accent);
+        }
+        .tutorial-box h3 { font-size: 1.6rem; margin-bottom: 20px; color: var(--accent); }
+        .tutorial-box p { font-size: 1rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
+        .nav-tutorial { display: flex; justify-content: space-between; gap: 10px; }
+        .btn-fechar-tutorial { background: #555; color: #fff; }
+        .btn-proximo-tutorial { background: var(--accent); color: #fff; }
+        .indicador-passo { margin: 15px 0 10px; color: #aaa; font-size: 0.9rem; }
+
+        /* Responsivo */
+        @media (max-width: 500px) {
+            h1 { font-size: 1.6rem; }
+            #configuracoes { padding: 10px 12px; gap: 6px; border-radius: 30px; }
+            #configuracoes button, #configuracoes .btn-tutorial { padding: 8px 14px; font-size: 0.85rem; }
+            .btn-tutorial { width: 36px; height: 36px; font-size: 1rem; }
+            #numDiscos { width: 55px; padding: 10px 4px; font-size: 1rem; }
+            
+            #tabuleiro { gap: 10px; min-height: 250px; }
+            .pino { border-radius: 12px; padding-bottom: 20px; }
+            .pino::before { width: 10px; height: calc(100% - 40px); bottom: 18px; }
+            .pino::after { width: 85%; height: 8px; bottom: 10px; border-radius: 4px; }
+            
+            .disco { height: 20px; border-radius: 15px; }
+            #vitoria-box, .tutorial-box { padding: 25px 20px; width: 90%; }
+        }
+    </style>
 </head>
-
 <body>
-    <h1><strong>Torre de Hanói 2.0</strong></h1>
-    <div id="notificacao">Aqui vai a notificação!</div>
+    <h1>Torre de Hanói 2.0</h1>
 
-    <div id="configuracoes">
-    <label>Discos: <input type="number" id="numDiscos" value="3" min="3" max="10"></label>
-    <label><input type="checkbox" id="usarCronometro"> Cronômetro</label>
-    <button onclick="reiniciarJogo()">Novo Jogo</button>
-</div>
-
-<div id="estatisticas" style="margin: 10px; font-weight: bold;">
-    Movimentos: <span id="contador-movimentos">0</span> | 
-    Objetivo Mínimo: <span id="objetivo-minimo">7</span>
-</div>
-
-<div id="display-tempo" style="display: none; margin: 10px;">
-    Tempo: <span id="segundos">0</span>s
-</div>
-    <div id="container-tabuleiro">
-        <div id="tabuleiro">
-            <div class="pino" id="pinoA" onclick="clicarPino('A')"></div>
-            <div class="pino" id="pinoB" onclick="clicarPino('B')"></div>
-            <div class="pino" id="pinoC" onclick="clicarPino('C')"></div>
+    <div id="notificacao"></div>
+    <div id="vitoria-overlay">
+        <div id="vitoria-box">
+            <h2>🏆 Você venceu!</h2>
+            <p id="vitoria-mensagem"></p>
+            <button id="btn-jogar-novamente">Jogar Novamente</button>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <div id="tutorial-overlay">
+        <div class="tutorial-box">
+            <h3 id="tutorial-titulo">Como jogar</h3>
+            <p id="tutorial-texto"></p>
+            <div class="indicador-passo" id="tutorial-passo"></div>
+            <div class="nav-tutorial">
+                <button class="btn-fechar-tutorial" id="btn-fechar-tutorial">Fechar</button>
+                <button class="btn-proximo-tutorial" id="btn-proximo-tutorial">Próximo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="configuracoes">
+        <label>Discos: <input type="number" id="numDiscos" value="3" min="3" max="10"></label>
+        <label><input type="checkbox" id="usarCronometro"> Cronômetro</label>
+        <button class="btn-novo" id="btnNovoJogo">✨ Novo Jogo</button>
+        <button class="btn-voltar" id="btnVoltar">↩ Voltar</button>
+        <button class="btn-tutorial" id="btnTutorial">?</button>
+    </div>
+
+    <div id="estatisticas">
+        Movimentos: <span id="contador-movimentos">0</span> | 
+        Objetivo Mínimo: <span id="objetivo-minimo">7</span>
+    </div>
+    <div id="display-tempo" style="display: none;">
+        ⏱ Tempo: <span id="segundos">0</span>s
+    </div>
+
+    <div id="container-tabuleiro">
+        <div id="tabuleiro">
+            <div class="pino" id="pinoA" data-pino="A"></div>
+            <div class="pino" id="pinoB" data-pino="B"></div>
+            <div class="pino" id="pinoC" data-pino="C"></div>
+        </div>
+    </div>
 
     <script>
+        // ==================== LÓGICA DO JOGO ====================
+        const DISC_COLORS = [
+            '#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#55efc4',
+            '#fd79a8', '#fdcb6e', '#81ecec', '#a29bfe', '#fab1a0'
+        ];
+
+        let numDiscos = 3;
+        let pilhas = { A: [], B: [], C: [] };
+        let pinoSelecionado = null;
+        let movimentos = 0;
+        let cronometroAtivo = false;
+        let segundos = 0;
+        let timerInterval = null;
+        let jogoConcluido = false;
+        let historicoMovimentos = [];
+
+        const inputNumDiscos = document.getElementById('numDiscos');
+        const checkboxCronometro = document.getElementById('usarCronometro');
+        const btnNovoJogo = document.getElementById('btnNovoJogo');
+        const btnVoltar = document.getElementById('btnVoltar');
+        const btnTutorial = document.getElementById('btnTutorial');
+        const contadorMovimentos = document.getElementById('contador-movimentos');
+        const objetivoMinimo = document.getElementById('objetivo-minimo');
+        const displayTempo = document.getElementById('display-tempo');
+        const spanSegundos = document.getElementById('segundos');
+        const notificacao = document.getElementById('notificacao');
+        const vitoriaOverlay = document.getElementById('vitoria-overlay');
+        const vitoriaMensagem = document.getElementById('vitoria-mensagem');
+        const btnJogarNovamente = document.getElementById('btn-jogar-novamente');
+        const tutorialOverlay = document.getElementById('tutorial-overlay');
+        const tutorialTitulo = document.getElementById('tutorial-titulo');
+        const tutorialTexto = document.getElementById('tutorial-texto');
+        const tutorialPasso = document.getElementById('tutorial-passo');
+        const btnFecharTutorial = document.getElementById('btn-fechar-tutorial');
+        const btnProximoTutorial = document.getElementById('btn-proximo-tutorial');
+
+        // =============== REDIMENSIONAMENTO INTELIGENTE ===============
+        function redimensionarComponentes() {
+            const tabuleiro = document.getElementById('tabuleiro');
+            const larguraTabuleiro = tabuleiro.clientWidth;
+            const alturaTela = window.innerHeight;
+
+            const totalDiscos = numDiscos;
+            const larguraMaiorDisco = 30 + totalDiscos * 18;
+            let larguraIdealBase = larguraMaiorDisco + 40;
+
+            // Limita a largura da base a no máximo 30% da largura do tabuleiro (para caber 3 pinos)
+            const maxLarguraPino = larguraTabuleiro * 0.30;
+            if (larguraIdealBase > maxLarguraPino) {
+                larguraIdealBase = maxLarguraPino;
+            }
+            // Mínimo de 24px para não sumir
+            if (larguraIdealBase < 24) larguraIdealBase = 24;
+
+            // Altura ideal dos pinos: espaço para todos os discos + folga
+            let alturaIdealPino = (totalDiscos * 20) + 60; // 20px por disco + 60px folga
+            const alturaMaximaPino = alturaTela * 0.5;   // no máximo 50% da tela
+            if (alturaIdealPino > alturaMaximaPino) alturaIdealPino = alturaMaximaPino;
+            if (alturaIdealPino < 150) alturaIdealPino = 150; // mínimo
+
+            // Aplica nos pinos
+            document.querySelectorAll('.pino').forEach(pino => {
+                pino.style.width = larguraIdealBase + 'px';
+                pino.style.height = alturaIdealPino + 'px';
+            });
+        }
+
+        // Recalcular ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            if (!jogoConcluido) redimensionarComponentes();
+        });
+
+        function inicializarJogo() {
+            numDiscos = parseInt(inputNumDiscos.value) || 3;
+            if (numDiscos < 3) numDiscos = 3;
+            if (numDiscos > 10) numDiscos = 10;
+            inputNumDiscos.value = numDiscos;
+
+            pilhas = { A: [], B: [], C: [] };
+            for (let i = numDiscos; i >= 1; i--) pilhas.A.push(i);
+
+            pinoSelecionado = null;
+            movimentos = 0;
+            jogoConcluido = false;
+            historicoMovimentos = [];
+            pararCronometro();
+            segundos = 0;
+            spanSegundos.textContent = '0';
+            atualizarObjetivo();
+            atualizarContador();
+            atualizarCronometroDisplay();
+            redimensionarComponentes();
+            renderizarTodosPinos();
+            vitoriaOverlay.classList.remove('mostrar');
+        }
+
+        function atualizarObjetivo() {
+            const minimo = Math.pow(2, numDiscos) - 1;
+            objetivoMinimo.textContent = minimo;
+        }
+
+        function atualizarContador() {
+            contadorMovimentos.textContent = movimentos;
+        }
+
+        function atualizarCronometroDisplay() {
+            if (checkboxCronometro.checked) {
+                displayTempo.style.display = 'block';
+                spanSegundos.textContent = segundos;
+            } else {
+                displayTempo.style.display = 'none';
+            }
+        }
+
+        function iniciarCronometro() {
+            if (!checkboxCronometro.checked || cronometroAtivo || jogoConcluido) return;
+            cronometroAtivo = true;
+            atualizarCronometroDisplay();
+            timerInterval = setInterval(() => {
+                segundos++;
+                spanSegundos.textContent = segundos;
+            }, 1000);
+        }
+
+        function pararCronometro() {
+            cronometroAtivo = false;
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function renderizarPino(nomePino) {
+            const pinoEl = document.getElementById('pino' + nomePino);
+            pinoEl.querySelectorAll('.disco').forEach(d => d.remove());
+            pilhas[nomePino].forEach((tamanho) => {
+                const disco = document.createElement('div');
+                disco.className = 'disco';
+                disco.dataset.tamanho = tamanho;
+                disco.dataset.pino = nomePino;
+                const largura = 30 + tamanho * 18;
+                disco.style.width = largura + 'px';
+                disco.style.backgroundColor = DISC_COLORS[(tamanho - 1) % DISC_COLORS.length];
+                disco.draggable = true;
+                disco.addEventListener('dragstart', handleDragStart);
+                disco.addEventListener('dragend', handleDragEnd);
+                pinoEl.appendChild(disco);
+            });
+        }
+
+        function renderizarTodosPinos() {
+            renderizarPino('A');
+            renderizarPino('B');
+            renderizarPino('C');
+            document.querySelectorAll('.pino').forEach(p => p.classList.remove('selecionado'));
+            pinoSelecionado = null;
+        }
+
+        function handlePinoClick(nomePino) {
+            if (jogoConcluido) return;
+            if (pinoSelecionado === null) {
+                if (pilhas[nomePino].length === 0) {
+                    mostrarNotificacao('Pino vazio! Escolha um pino com discos.', 'aviso');
+                    return;
+                }
+                pinoSelecionado = nomePino;
+                document.getElementById('pino' + nomePino).classList.add('selecionado');
+                iniciarCronometro();
+            } else if (pinoSelecionado === nomePino) {
+                document.getElementById('pino' + nomePino).classList.remove('selecionado');
+                pinoSelecionado = null;
+            } else {
+                const origem = pinoSelecionado;
+                const destino = nomePino;
+                if (movimentoValido(origem, destino)) {
+                    executarMovimento(origem, destino);
+                    document.getElementById('pino' + origem).classList.remove('selecionado');
+                    pinoSelecionado = null;
+                    verificarVitoria();
+                } else {
+                    mostrarNotificacao('❌ Movimento inválido!', 'erro');
+                    document.getElementById('pino' + origem).classList.remove('selecionado');
+                    if (pilhas[destino].length > 0) {
+                        pinoSelecionado = destino;
+                        document.getElementById('pino' + destino).classList.add('selecionado');
+                    } else {
+                        pinoSelecionado = null;
+                    }
+                }
+            }
+        }
+
+        function movimentoValido(origem, destino) {
+            if (pilhas[origem].length === 0) return false;
+            if (pilhas[destino].length === 0) return true;
+            return pilhas[origem].slice(-1)[0] < pilhas[destino].slice(-1)[0];
+        }
+
+        function executarMovimento(origem, destino) {
+            const disco = pilhas[origem].pop();
+            pilhas[destino].push(disco);
+            movimentos++;
+            historicoMovimentos.push({ origem, destino, disco });
+            atualizarContador();
+            renderizarTodosPinos();
+            const pinoDest = document.getElementById('pino' + destino);
+            pinoDest.style.animation = 'none';
+            pinoDest.offsetHeight;
+            pinoDest.style.animation = 'vibrar 0.3s ease-out';
+            setTimeout(() => { pinoDest.style.animation = ''; }, 300);
+        }
+
+        // Desfazer com penalidade de +1 movimento (botão Voltar)
+        function voltarJogada() {
+            if (jogoConcluido || historicoMovimentos.length === 0) {
+                mostrarNotificacao('Nada para voltar!', 'aviso');
+                return;
+            }
+            const ultimo = historicoMovimentos.pop();
+            pilhas[ultimo.destino].pop();
+            pilhas[ultimo.origem].push(ultimo.disco);
+            movimentos++; // penalidade: conta como um movimento extra
+            atualizarContador();
+            renderizarTodosPinos();
+            mostrarNotificacao('↩ Voltar (+1 movimento)', 'info');
+        }
+
+        // Desfazer sem penalidade (atalho Ctrl+Z)
+        function desfazerMovimento() {
+            if (jogoConcluido || historicoMovimentos.length === 0) return;
+            const ultimo = historicoMovimentos.pop();
+            pilhas[ultimo.destino].pop();
+            pilhas[ultimo.origem].push(ultimo.disco);
+            movimentos--; // sem penalidade
+            atualizarContador();
+            renderizarTodosPinos();
+            mostrarNotificacao('↩ Movimento desfeito', 'info');
+        }
+
+        function verificarVitoria() {
+            if (pilhas.C.length === numDiscos) {
+                jogoConcluido = true;
+                pararCronometro();
+                const minimo = Math.pow(2, numDiscos) - 1;
+                let mensagem = `Completado em ${movimentos} movimentos`;
+                if (movimentos === minimo) mensagem += ' ⭐ Solução perfeita!';
+                if (cronometroAtivo || segundos > 0) mensagem += ` | Tempo: ${segundos}s`;
+                vitoriaMensagem.textContent = mensagem;
+                vitoriaOverlay.classList.add('mostrar');
+                criarConfete();
+            }
+        }
+
+        let notificacaoTimeout;
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            clearTimeout(notificacaoTimeout);
+            notificacao.innerHTML = mensagem;
+            notificacao.className = 'mostrar';
+            if (tipo === 'erro') {
+                notificacao.style.background = 'linear-gradient(135deg, #c0392b, #e74c3c)';
+            } else if (tipo === 'vitoria') {
+                notificacao.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+            } else if (tipo === 'aviso') {
+                notificacao.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
+            } else {
+                notificacao.style.background = 'linear-gradient(135deg, #1a1a2e, #0f3460)';
+            }
+            notificacaoTimeout = setTimeout(() => {
+                notificacao.classList.remove('mostrar');
+            }, 2500);
+        }
+
+        function criarConfete() {
+            const colors = ['#e94560', '#f5c518', '#16c79a', '#48dbfb', '#ff9ff3', '#55efc4'];
+            for (let i = 0; i < 40; i++) {
+                const confete = document.createElement('div');
+                confete.style.cssText = `
+                    position: fixed;
+                    width: ${Math.random() * 10 + 6}px;
+                    height: ${Math.random() * 10 + 6}px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    left: ${Math.random() * 100}vw;
+                    top: -20px;
+                    border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                    z-index: 3000;
+                    pointer-events: none;
+                    animation: cairConfete ${Math.random() * 2 + 2}s linear forwards;
+                `;
+                document.body.appendChild(confete);
+                setTimeout(() => confete.remove(), 3000);
+            }
+        }
+
+        const styleExtra = document.createElement('style');
+        styleExtra.textContent = `
+            @keyframes cairConfete {
+                0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+                100% { transform: translateY(105vh) rotate(720deg) scale(0.3); opacity: 0; }
+            }
+            @keyframes vibrar {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-4px); }
+                75% { transform: translateX(4px); }
+            }
+        `;
+        document.head.appendChild(styleExtra);
+
+        // Tutorial
+        const passosTutorial = [
+            { titulo: '🎯 Objetivo', texto: 'Mova todos os discos do Pino A para o Pino C, sem colocar um disco maior sobre um menor.' },
+            { titulo: '👆 Selecionar', texto: 'Clique em um pino para selecionar o disco do topo. Ele ficará azul brilhante.' },
+            { titulo: '👉 Mover', texto: 'Clique em outro pino para mover o disco. Você também pode arrastar os discos!' },
+            { titulo: '↩ Voltar', texto: 'Use o botão Voltar para desfazer uma jogada (custa +1 movimento). O atalho Ctrl+Z desfaz sem custo extra.' },
+            { titulo: '⏱ Tempo', texto: 'Ative o Cronômetro se quiser desafiar a velocidade. O objetivo mínimo está na tela.' },
+        ];
+        let passoTutorialAtual = 0;
+
+        function abrirTutorial() {
+            passoTutorialAtual = 0;
+            mostrarPassoTutorial();
+            tutorialOverlay.classList.add('mostrar');
+        }
+
+        function fecharTutorial() {
+            tutorialOverlay.classList.remove('mostrar');
+        }
+
+        function mostrarPassoTutorial() {
+            const passo = passosTutorial[passoTutorialAtual];
+            tutorialTitulo.textContent = passo.titulo;
+            tutorialTexto.textContent = passo.texto;
+            tutorialPasso.textContent = `Passo ${passoTutorialAtual + 1} de ${passosTutorial.length}`;
+        }
+
+        btnTutorial.addEventListener('click', abrirTutorial);
+        btnFecharTutorial.addEventListener('click', fecharTutorial);
+        btnProximoTutorial.addEventListener('click', () => {
+            passoTutorialAtual = (passoTutorialAtual + 1) % passosTutorial.length;
+            mostrarPassoTutorial();
+        });
+
+        // Eventos de arrastar
+        let discoArrastado = null;
+        function handleDragStart(e) {
+            if (jogoConcluido) { e.preventDefault(); return; }
+            discoArrastado = this;
+            this.style.opacity = '0.6';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.tamanho);
+            iniciarCronometro();
+        }
+        function handleDragEnd(e) {
+            if (discoArrastado) {
+                discoArrastado.style.opacity = '1';
+                discoArrastado = null;
+            }
+            document.querySelectorAll('.pino').forEach(p => p.classList.remove('drag-over'));
+        }
+
+        document.querySelectorAll('.pino').forEach(pino => {
+            pino.addEventListener('click', () => handlePinoClick(pino.dataset.pino));
+            pino.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                pino.classList.add('drag-over');
+            });
+            pino.addEventListener('dragleave', () => pino.classList.remove('drag-over'));
+            pino.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                if (!discoArrastado) return;
+                const origem = discoArrastado.dataset.pino;
+                const destino = this.dataset.pino;
+                if (origem === destino) {
+                    discoArrastado.style.opacity = '1';
+                    discoArrastado = null;
+                    return;
+                }
+                const topoOrigem = pilhas[origem].slice(-1)[0];
+                const discoTamanho = parseInt(discoArrastado.dataset.tamanho);
+                if (topoOrigem !== discoTamanho) {
+                    mostrarNotificacao('Apenas o disco do topo pode ser movido!', 'aviso');
+                    discoArrastado.style.opacity = '1';
+                    discoArrastado = null;
+                    return;
+                }
+                if (movimentoValido(origem, destino)) {
+                    executarMovimento(origem, destino);
+                    verificarVitoria();
+                } else {
+                    mostrarNotificacao('❌ Movimento inválido!', 'erro');
+                }
+                discoArrastado.style.opacity = '1';
+                discoArrastado = null;
+            });
+        });
+
+        btnNovoJogo.addEventListener('click', () => {
+            inicializarJogo();
+            mostrarNotificacao('🔄 Novo jogo!', 'info');
+        });
+        btnJogarNovamente.addEventListener('click', () => {
+            inicializarJogo();
+            mostrarNotificacao('Boa sorte!', 'info');
+        });
+        btnVoltar.addEventListener('click', voltarJogada);
+        inputNumDiscos.addEventListener('change', inicializarJogo);
+        checkboxCronometro.addEventListener('change', () => {
+            if (!checkboxCronometro.checked) pararCronometro();
+            atualizarCronometroDisplay();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                desfazerMovimento();
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                if (!e.ctrlKey && !e.metaKey && document.activeElement === document.body) {
+                    inicializarJogo();
+                }
+            }
+        });
+
+        // Service Worker
         let novoWorker;
-        
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
-            .then(registro => {console.log("Trabalhador de fundo registrado com sucesso!");
-                regirtro.addEventListener('updatefound', () => {
-                    novoWorker = registro.installing;
-                    console.log("Novo trabalhador de fundo encontrado!");
-                    novoWorker.addEventListener('statechange', () => {
-                        if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            mostrarAvisoDeAtualizacao();
-                            // Opcional: notificar o usuário que uma nova versão está disponível
-                            // alert("Nova versão disponível! Por favor, recarregue a página.");
-                        }
+                .then(registro => {
+                    console.log('✅ SW registrado');
+                    registro.addEventListener('updatefound', () => {
+                        novoWorker = registro.installing;
+                        novoWorker.addEventListener('statechange', () => {
+                            if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                mostrarAvisoAtualizacao();
+                            }
+                        });
                     });
-                });
-            }).catch(erro => console.log("Erro no SW:", erro));
+                }).catch(erro => console.log('Erro SW:', erro));
 
-            // Quando o novo worker assumir o controle, recarrega a página automaticamente
-            let atualizando;
+            let atualizando = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (atualizando) return;
                 atualizando = true;
@@ -65,28 +789,17 @@
             });
         }
 
-        // Função que usa o seu sistema de notificação para oferecer a atualização
-        function mostrarAvisoDeAtualizacao() {
-            const notif = document.getElementById("notificacao");
-            // Adiciona a mensagem e um botão chamativo de atualizar
-            notif.innerHTML = `
-                Nova versão disponível! <br><br>
-                <button onclick="aceitarAtualizacao()" style="padding: 10px 20px; font-size: 16px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                    Atualizar Agora
-                </button>
-            `;
-            notif.classList.add("mostrar");
-            
-            // Removemos o clique para fechar, forçando o usuário a atualizar ou ignorar
-            document.removeEventListener('click', esconderNotificacao);
+        function mostrarAvisoAtualizacao() {
+            notificacao.innerHTML = '🔄 Nova versão!<br><button id="btnAtualizar" style="margin-top:8px;padding:8px 16px;background:#2ecc71;border:none;border-radius:20px;color:#fff;font-weight:bold;">Atualizar</button>';
+            notificacao.classList.add('mostrar');
+            document.getElementById('btnAtualizar').addEventListener('click', () => {
+                if (novoWorker) novoWorker.postMessage({ type: 'SKIP_WAITING' });
+            });
         }
 
-        function aceitarAtualizacao() {
-            if (novoWorker) {
-                // Envia a mensagem para o sw.js executar o "self.skipWaiting()"
-                novoWorker.postMessage({ type: 'SKIP_WAITING' });
-            }
-        }
+        // Início
+        inicializarJogo();
+        atualizarCronometroDisplay();
     </script>
 </body>
 </html>
