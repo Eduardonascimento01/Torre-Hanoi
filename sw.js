@@ -1,4 +1,4 @@
-const CACHE_NAME = 'torre-hanoi-v2';
+const CACHE_NAME = 'torre-hanoi-v4';
 const urlsToCache = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', event => {
