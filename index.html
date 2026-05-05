@@ -178,14 +178,12 @@
         #tabuleiro {
             display: flex;
             justify-content: center;
-            gap: 20px; /* Espaço entre os quadrados */
+            gap: 20px;
             align-items: flex-end;
             min-height: 300px;
             position: relative;
-            /* O fundo compartilhado foi removido para focar nos quadrados individuais */
         }
 
-        /* Cada Pino agora é o Quadrado/Container */
         .pino {
             position: relative;
             z-index: 3;
@@ -199,11 +197,9 @@
             display: flex;
             flex-direction: column-reverse;
             align-items: center;
-            /* Espaço exato embaixo para o primeiro disco não cobrir a base */
             padding-bottom: 24px; 
         }
 
-        /* A Haste do pino (agora desenhada usando pseudo-elemento) */
         .pino::before {
             content: '';
             position: absolute;
@@ -218,14 +214,13 @@
             box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1);
         }
 
-        /* A Base do pino */
         .pino::after {
             content: '';
             position: absolute;
             bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
-            width: 80%; /* Ocupa 80% da largura do quadrado */
+            width: 80%;
             height: 12px;
             background: linear-gradient(180deg, #8b6b7a, #53354a);
             border-radius: 6px;
@@ -243,13 +238,12 @@
             background: rgba(40, 40, 70, 0.7);
         }
 
-        /* Discos */
         .disco {
             height: 24px;
             border-radius: 20px;
             margin-bottom: 2px;
             position: relative;
-            z-index: 6; /* Garante que fica à frente da haste */
+            z-index: 6;
             transition: all 0.15s ease-out;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.2);
             cursor: grab;
@@ -258,7 +252,6 @@
             cursor: grabbing;
         }
 
-        /* Modal do tutorial */
         #tutorial-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px);
@@ -276,7 +269,7 @@
         .btn-proximo-tutorial { background: var(--accent); color: #fff; }
         .indicador-passo { margin: 15px 0 10px; color: #aaa; font-size: 0.9rem; }
 
-        /* Responsivo */
+        /* Responsivo (Celular em pé) */
         @media (max-width: 500px) {
             h1 { font-size: 1.6rem; }
             #configuracoes { padding: 10px 12px; gap: 6px; border-radius: 30px; }
@@ -291,6 +284,23 @@
             
             .disco { height: 20px; border-radius: 15px; }
             #vitoria-box, .tutorial-box { padding: 25px 20px; width: 90%; }
+        }
+
+        /* Responsivo (Celular deitado / Modo Paisagem) */
+        @media (orientation: landscape) and (max-height: 600px) {
+            h1 { margin: 5px 0; font-size: 1.2rem; display: none; /* Esconde o título para dar espaço */ }
+            #configuracoes { margin: 5px 10px; padding: 5px 15px; gap: 10px; flex-wrap: nowrap; }
+            #configuracoes button, #configuracoes .btn-tutorial { padding: 6px 12px; font-size: 0.8rem; }
+            .btn-tutorial { width: 30px; height: 30px; font-size: 0.9rem; }
+            #numDiscos { padding: 4px; font-size: 0.9rem; width: 50px; }
+            #estatisticas { padding: 5px 15px; font-size: 0.85rem; margin-bottom: 5px; }
+            #display-tempo { margin-top: 0; padding: 5px 15px; }
+            #tabuleiro { min-height: 200px; gap: 10px; }
+            .pino { padding-bottom: 16px; border-radius: 12px; }
+            .pino::before { width: 10px; bottom: 14px; }
+            .pino::after { width: 85%; height: 8px; bottom: 8px; border-radius: 4px; }
+            .disco { height: 16px; margin-bottom: 1px; border-radius: 10px; }
+            #container-tabuleiro { margin: 0 auto 5px; padding: 0 5px; }
         }
     </style>
 </head>
@@ -385,34 +395,55 @@
             const larguraTabuleiro = tabuleiro.clientWidth;
             const alturaTela = window.innerHeight;
 
-            const totalDiscos = numDiscos;
-            const larguraMaiorDisco = 30 + totalDiscos * 18;
-            let larguraIdealBase = larguraMaiorDisco + 40;
+            // Verifica se está no modo deitado
+            const isLandscape = window.matchMedia("(orientation: landscape)").matches && alturaTela < 600;
 
-            // Limita a largura da base a no máximo 30% da largura do tabuleiro (para caber 3 pinos)
+            const totalDiscos = numDiscos;
+            const baseDiscoWidth = isLandscape ? 12 : 18; // Discos mais estreitos deitado
+            const larguraMaiorDisco = 30 + totalDiscos * baseDiscoWidth;
+            let larguraIdealBase = larguraMaiorDisco + (isLandscape ? 20 : 40);
+
+            // Limita a largura da base a no máximo 30% da largura do tabuleiro
             const maxLarguraPino = larguraTabuleiro * 0.30;
             if (larguraIdealBase > maxLarguraPino) {
                 larguraIdealBase = maxLarguraPino;
             }
-            // Mínimo de 24px para não sumir
             if (larguraIdealBase < 24) larguraIdealBase = 24;
 
-            // Altura ideal dos pinos: espaço para todos os discos + folga
-            let alturaIdealPino = (totalDiscos * 20) + 60; // 20px por disco + 60px folga
-            const alturaMaximaPino = alturaTela * 0.5;   // no máximo 50% da tela
-            if (alturaIdealPino > alturaMaximaPino) alturaIdealPino = alturaMaximaPino;
-            if (alturaIdealPino < 150) alturaIdealPino = 150; // mínimo
+            // Altura ideal dos pinos
+            const alturaDisco = isLandscape ? 16 : (window.innerWidth <= 500 ? 20 : 24);
+            let alturaIdealPino = (totalDiscos * alturaDisco) + (isLandscape ? 30 : 60);
+
+            // No modo paisagem, podemos usar mais da tela (até 65%)
+            const limiteAltura = isLandscape ? alturaTela * 0.65 : alturaTela * 0.5;
+            if (alturaIdealPino > limiteAltura) alturaIdealPino = limiteAltura;
+            if (alturaIdealPino < 100) alturaIdealPino = 100;
 
             // Aplica nos pinos
             document.querySelectorAll('.pino').forEach(pino => {
                 pino.style.width = larguraIdealBase + 'px';
                 pino.style.height = alturaIdealPino + 'px';
             });
+
+            // Aplica nos discos existentes para quando a tela for virada
+            document.querySelectorAll('.disco').forEach(disco => {
+                const tamanho = parseInt(disco.dataset.tamanho);
+                const largura = 30 + tamanho * baseDiscoWidth;
+                disco.style.width = largura + 'px';
+                disco.style.height = alturaDisco + 'px';
+            });
         }
 
         // Recalcular ao redimensionar a janela
         window.addEventListener('resize', () => {
             if (!jogoConcluido) redimensionarComponentes();
+        });
+
+        // Recalcular ao virar o celular (Modo Paisagem)
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                if (!jogoConcluido) redimensionarComponentes();
+            }, 200); // Dá um tempinho pro celular processar a virada
         });
 
         function inicializarJogo() {
@@ -434,8 +465,7 @@
             atualizarObjetivo();
             atualizarContador();
             atualizarCronometroDisplay();
-            redimensionarComponentes();
-            renderizarTodosPinos();
+            renderizarTodosPinos(); // O renderizarTodosPinos agora chama o redimensionarComponentes no final
             vitoriaOverlay.classList.remove('mostrar');
         }
 
@@ -481,6 +511,7 @@
                 disco.className = 'disco';
                 disco.dataset.tamanho = tamanho;
                 disco.dataset.pino = nomePino;
+                // A largura será sobrescrita pelo redimensionarComponentes logo em seguida, mas deixamos um padrão:
                 const largura = 30 + tamanho * 18;
                 disco.style.width = largura + 'px';
                 disco.style.backgroundColor = DISC_COLORS[(tamanho - 1) % DISC_COLORS.length];
@@ -497,6 +528,8 @@
             renderizarPino('C');
             document.querySelectorAll('.pino').forEach(p => p.classList.remove('selecionado'));
             pinoSelecionado = null;
+            // Garante que logo após renderizar as peças, elas ficam do tamanho exato da tela atual
+            redimensionarComponentes();
         }
 
         function handlePinoClick(nomePino) {
