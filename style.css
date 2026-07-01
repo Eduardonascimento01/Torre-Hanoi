@@ -1,104 +1,317 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #f0f0f0;
+:root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --accent: #3498db;
+    --accent2: #2980b9;
+    --gold: #f5c518;
+    --text: #eee;
+    --pin: #53354a;
+    --shadow-azul: rgba(52, 152, 219, 0.6);
 }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    color: var(--text);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.2), transparent),
+        radial-gradient(1.5px 1.5px at 50% 30%, rgba(255, 255, 255, 0.25), transparent),
+        radial-gradient(1px 1px at 70% 50%, rgba(255, 255, 255, 0.2), transparent),
+        radial-gradient(1.5px 1.5px at 90% 10%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(1px 1px at 20% 90%, rgba(255, 255, 255, 0.15), transparent),
+        radial-gradient(1px 1px at 80% 80%, rgba(255, 255, 255, 0.2), transparent);
+    pointer-events: none;
+    z-index: 0;
+}
+
+h1 {
+    margin: 25px 0 5px;
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #3498db, #f5c518);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+}
+
+/* Notificações */
+#notificacao {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120px);
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 16px;
+    font-weight: 600;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 2px var(--shadow-azul);
+    z-index: 1000;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    max-width: 90vw;
+}
+#notificacao.mostrar {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Modal vitória */
+#vitoria-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+    z-index: 2000; justify-content: center; align-items: center; flex-direction: column;
+}
+#vitoria-overlay.mostrar { display: flex; }
+#vitoria-box {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid var(--gold); border-radius: 30px; padding: 40px 30px;
+    text-align: center; box-shadow: 0 0 50px rgba(245, 197, 24, 0.4);
+    max-width: 90vw; width: 340px;
+}
+#vitoria-box h2 {
+    font-size: 2.2rem; margin-bottom: 10px;
+    background: linear-gradient(135deg, #f5c518, #3498db);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+#vitoria-box p { font-size: 1.1rem; margin: 10px 0 20px; color: #ddd; }
+#vitoria-box button {
+    padding: 14px 30px; font-size: 1.1rem; font-weight: 700;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none; border-radius: 30px; color: #fff; cursor: pointer;
+    box-shadow: 0 5px 20px rgba(52, 152, 219, 0.5); transition: all 0.3s; letter-spacing: 1px;
+}
+#vitoria-box button:hover { background: linear-gradient(135deg, #2980b9, #1c6ea4); transform: scale(1.05); }
+
+/* Configurações */
+#configuracoes {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
+    margin: 15px 10px; background: rgba(26, 26, 46, 0.7); padding: 14px 20px;
+    border-radius: 50px; backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); position: relative; z-index: 2;
+}
+#configuracoes label { color: #ccc; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+#numDiscos {
+    width: 65px; padding: 12px 6px; border-radius: 25px; border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 15, 26, 0.8); color: #fff; text-align: center; font-size: 1.2rem; font-weight: bold; transition: all 0.3s;
+}
+#numDiscos:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 15px var(--shadow-azul); }
+#usarCronometro { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+#configuracoes button, #configuracoes .btn-tutorial {
+    padding: 10px 18px; border: none; border-radius: 30px; cursor: pointer; font-weight: 700;
+    font-size: 0.95rem; letter-spacing: 1px; transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-novo { background: linear-gradient(135deg, #e94560, #c0392b); color: #fff; box-shadow: 0 4px 15px rgba(233, 68, 96, 0.4); }
+.btn-novo:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(233, 68, 96, 0.6); }
+.btn-voltar { background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); }
+.btn-voltar:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(243, 156, 18, 0.6); }
+.btn-tutorial { background: var(--accent); color: #fff; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 4px 15px var(--shadow-azul); padding: 0; }
+.btn-tutorial:hover { background: #2980b9; transform: scale(1.1); }
+button:active { transform: scale(0.95) !important; }
+
+/* Estatísticas */
+#estatisticas {
+    display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; align-items: center;
+    background: rgba(26, 26, 46, 0.6); padding: 10px 24px; border-radius: 30px; font-weight: 600;
+    font-size: 1rem; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); position: relative; z-index: 2;
+}
+#estatisticas span { color: var(--gold); font-weight: 800; font-size: 1.2rem; margin-left: 4px; }
+#display-tempo {
+    background: rgba(26, 26, 46, 0.6); padding: 8px 20px; border-radius: 20px; font-weight: 600;
+    backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); position: relative; z-index: 2;
+}
+#display-tempo span { color: #16c79a; font-weight: 800; }
+
+/* ================= TABULEIRO ================= */
 #container-tabuleiro {
     width: 100%;
-    overflow-x: hidden;
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 15px;
+    position: relative;
+    z-index: 2;
 }
 
 #tabuleiro {
-    display: flex; 
+    display: flex;
     justify-content: center;
-    gap: 50px; 
-    
+    gap: 20px;
+    align-items: flex-end;
+    min-height: 300px;
+    position: relative;
 }
 
 .pino {
-    width: 170px;
-    height: 250px; 
-    background-color: transparent; 
-    border-bottom: 10px solid #333; 
+    position: relative;
+    z-index: 3;
+    background: rgba(20, 20, 40, 0.5);
+    border-radius: 20px;
+    border: 2px solid rgba(52, 152, 219, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    cursor: pointer;
+    transition: all 0.3s;
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
-    position: relative; 
-    z-index: 1;  
+    padding-bottom: 24px;
+}
+
+.pino::before {
+    content: '';
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: var(--haste-altura, calc(100% - 30px));
+    background: linear-gradient(180deg, #8b6b7a 0%, #53354a 60%, #3d2633 100%);
+    border-radius: 10px 10px 2px 2px;
+    z-index: 1;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1);
 }
 
 .pino::after {
-    content: ""; 
+    content: '';
     position: absolute;
-    bottom: 0; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    width: 15px; 
-    height: 100%; 
-    background-color: #8c2828; 
-    border-radius: 5px 5px 0 0; 
-    z-index: 0; 
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 12px;
+    background: linear-gradient(180deg, #8b6b7a, #53354a);
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    z-index: 1;
+}
+
+.pino:hover {
+    box-shadow: 0 8px 30px var(--shadow-azul), 0 0 0 2px var(--shadow-azul);
+    background: rgba(30, 30, 50, 0.6);
+}
+
+.pino:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px #fff, 0 0 25px var(--shadow-azul);
+}
+
+.pino.selecionado, .pino.drag-over {
+    box-shadow: 0 0 0 3px var(--accent), 0 0 25px var(--shadow-azul);
+    background: rgba(40, 40, 70, 0.7);
 }
 
 .disco {
-    height: 20px; /* Diminuímos a altura para caber 10 */
-    background-color: #3498db;
-    border-radius: 5px;
-    margin-bottom: 1px;
-    border: 1px solid rgba(0,0,0,0.2);
+    height: 24px;
+    border-radius: 20px;
+    margin-bottom: 2px;
     position: relative;
-    z-index: 10;
-    transition: all 0.2s; /* Adiciona uma animação suave ao mover */
+    z-index: 6;
+    transition: all 0.15s ease-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+    cursor: grab;
+}
+.disco:active {
+    cursor: grabbing;
 }
 
-.pino.selecionado {
-    background-color: rgba(0, 0, 0, 0.05); /* Fundo um pouco mais escurinho */
-    border-bottom: 10px solid #3498db; /* Base azul */
+/* ================= TUTORIAL ================= */
+#tutorial-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px);
+    z-index: 3000; justify-content: center; align-items: center; flex-direction: column;
 }
-#configuracoes {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    display: inline-block;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+#tutorial-overlay.mostrar { display: flex; }
+.tutorial-box {
+    background: #1a1a2e; border-radius: 30px; padding: 30px; max-width: 90vw; width: 380px;
+    text-align: center; box-shadow: 0 0 40px var(--shadow-azul); border: 2px solid var(--accent);
+}
+.tutorial-box h3 { font-size: 1.6rem; margin-bottom: 20px; color: var(--accent); }
+.tutorial-box p { font-size: 1rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
+.nav-tutorial { display: flex; justify-content: space-between; gap: 10px; }
+.btn-fechar-tutorial { background: #555; color: #fff; }
+.btn-proximo-tutorial { background: var(--accent); color: #fff; }
+.indicador-passo { margin: 15px 0 10px; color: #aaa; font-size: 0.9rem; }
+
+/* ================= ANIMAÇÕES (confete e vibração ao soltar disco) ================= */
+@keyframes cairConfete {
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(105vh) rotate(720deg) scale(0.3); opacity: 0; }
+}
+@keyframes vibrar {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
 }
 
-#configuracoes label, #configuracoes button {
-    margin: 0 10px;
-    cursor: pointer;
+/* Responsivo (Celular em pé) */
+@media (max-width: 500px) {
+    h1 { font-size: 1.6rem; }
+    #configuracoes { padding: 10px 12px; gap: 6px; border-radius: 30px; }
+    #configuracoes button, #configuracoes .btn-tutorial { padding: 8px 14px; font-size: 0.85rem; }
+    .btn-tutorial { width: 36px; height: 36px; font-size: 1rem; }
+    #numDiscos { width: 55px; padding: 10px 4px; font-size: 1rem; }
+
+    #tabuleiro { gap: 10px; min-height: 250px; }
+    .pino { border-radius: 12px; padding-bottom: 20px; }
+    .pino::before { width: 10px; height: calc(100% - 40px); bottom: 18px; }
+    .pino::after { width: 85%; height: 8px; bottom: 10px; border-radius: 4px; }
+
+    .disco { height: 20px; border-radius: 15px; }
+    #vitoria-box, .tutorial-box { padding: 25px 20px; width: 90%; }
 }
 
-input[type="number"] {
-    width: 40px;
+/* Responsivo (Celular deitado / Modo Paisagem) */
+@media (orientation: landscape) and (max-height: 600px) {
+    h1 { margin: 5px 0; font-size: 1.2rem; display: none; }
+    #configuracoes { margin: 5px 10px; padding: 5px 15px; gap: 10px; flex-wrap: nowrap; }
+    #configuracoes button, #configuracoes .btn-tutorial { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-tutorial { width: 30px; height: 30px; font-size: 0.9rem; }
+    #numDiscos { padding: 4px; font-size: 0.9rem; width: 50px; }
+    #estatisticas { padding: 5px 15px; font-size: 0.85rem; margin-bottom: 5px; }
+    #display-tempo { margin-top: 0; padding: 5px 15px; }
+    #tabuleiro { min-height: 200px; gap: 10px; }
+    .pino { padding-bottom: 16px; border-radius: 12px; }
+    .pino::before { width: 10px; bottom: 14px; }
+    .pino::after { width: 85%; height: 8px; bottom: 8px; border-radius: 4px; }
+    .disco { height: 16px; margin-bottom: 1px; border-radius: 10px; }
+    #container-tabuleiro { margin: 0 auto 5px; padding: 0 5px; }
 }
 
-#notificacao {
-    position: fixed; /* Fica fixo na tela mesmo se rolar a página */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* Centraliza perfeitamente */
-    background-color: rgba(44, 62, 80, 0.95); /* Azul escuro quase preto */
-    color: white;
-    padding: 20px 40px;
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: bold;
-    z-index: 9999; /* Fica por cima de absolutamente tudo */
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    text-align: center;
-    cursor: pointer; /* Muda o mouse para uma mãozinha */
-    
-    /* A mágica da animação de sumir e aparecer */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-#notificacao.mostrar {
-    opacity: 1;
-    visibility: visible;
+/* Respeita preferência do usuário por menos animação */
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }

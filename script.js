@@ -1,172 +1,509 @@
-// --- VARIÁVEIS GLOBAIS ---
-let estadoDoJogo = { A: [], B: [], C: [] };
-let pinoOrigem = null;
-let segundos = 0;
-let intervaloCronometro = null;
-let jogoAtivo = false;
+// ==================== CONFIGURAÇÃO ====================
+const DISC_COLORS = [
+    '#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#55efc4',
+    '#fd79a8', '#fdcb6e', '#81ecec', '#a29bfe', '#fab1a0'
+];
+
+// ==================== ESTADO DO JOGO ====================
+let numDiscos = 3;
+let pilhas = { A: [], B: [], C: [] };
+let pinoSelecionado = null;
 let movimentos = 0;
+let segundos = 0;
+let timerInterval = null;
+let cronometroAtivo = false;
+let jogoConcluido = false;
+let historicoMovimentos = [];
 
-// --- FUNÇÕES DE LÓGICA DO JOGO ---
-function reiniciarJogo() {
-    const totalDiscos = parseInt(document.getElementById("numDiscos").value);
-    const querCronometro = document.getElementById("usarCronometro").checked;
+// ==================== REFERÊNCIAS DO DOM ====================
+const inputNumDiscos = document.getElementById('numDiscos');
+const checkboxCronometro = document.getElementById('usarCronometro');
+const btnNovoJogo = document.getElementById('btnNovoJogo');
+const btnVoltar = document.getElementById('btnVoltar');
+const btnTutorial = document.getElementById('btnTutorial');
+const contadorMovimentos = document.getElementById('contador-movimentos');
+const objetivoMinimo = document.getElementById('objetivo-minimo');
+const displayTempo = document.getElementById('display-tempo');
+const spanSegundos = document.getElementById('segundos');
+const notificacao = document.getElementById('notificacao');
+const vitoriaOverlay = document.getElementById('vitoria-overlay');
+const vitoriaMensagem = document.getElementById('vitoria-mensagem');
+const btnJogarNovamente = document.getElementById('btn-jogar-novamente');
+const tutorialOverlay = document.getElementById('tutorial-overlay');
+const tutorialTitulo = document.getElementById('tutorial-titulo');
+const tutorialTexto = document.getElementById('tutorial-texto');
+const tutorialPasso = document.getElementById('tutorial-passo');
+const btnFecharTutorial = document.getElementById('btn-fechar-tutorial');
+const btnProximoTutorial = document.getElementById('btn-proximo-tutorial');
 
-    const larguraIdealBase = (totalDiscos * 25 + 20) + 40; 
-    const alturaIdealPino = (totalDiscos * 21) + 60; 
+// ==================== REDIMENSIONAMENTO ====================
+function redimensionarComponentes() {
+    const tabuleiro = document.getElementById('tabuleiro');
+    const larguraTabuleiro = tabuleiro.clientWidth;
+    const alturaTela = window.innerHeight;
+
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches && alturaTela < 600;
+
+    const totalDiscos = numDiscos;
+    const baseDiscoWidth = isLandscape ? 12 : 18;
+    const larguraMaiorDisco = 30 + totalDiscos * baseDiscoWidth;
+    let larguraIdealBase = larguraMaiorDisco + (isLandscape ? 20 : 40);
+
+    const maxLarguraPino = larguraTabuleiro * 0.30;
+    if (larguraIdealBase > maxLarguraPino) larguraIdealBase = maxLarguraPino;
+    if (larguraIdealBase < 24) larguraIdealBase = 24;
+
+    const alturaDisco = isLandscape ? 16 : (window.innerWidth <= 500 ? 20 : 24);
+    let alturaIdealPino = (totalDiscos * alturaDisco) + (isLandscape ? 30 : 60);
+
+    const limiteAltura = isLandscape ? alturaTela * 0.65 : alturaTela * 0.5;
+    if (alturaIdealPino > limiteAltura) alturaIdealPino = limiteAltura;
+    if (alturaIdealPino < 100) alturaIdealPino = 100;
 
     document.querySelectorAll('.pino').forEach(pino => {
-        pino.style.width = larguraIdealBase + "px";
-        pino.style.height = alturaIdealPino + "px";
+        pino.style.width = larguraIdealBase + 'px';
+        pino.style.height = alturaIdealPino + 'px';
     });
 
+    document.querySelectorAll('.disco').forEach(disco => {
+        const tamanho = parseInt(disco.dataset.tamanho, 10);
+        const largura = 30 + tamanho * baseDiscoWidth;
+        disco.style.width = largura + 'px';
+        disco.style.height = alturaDisco + 'px';
+    });
+}
+
+window.addEventListener('resize', () => {
+    if (!jogoConcluido) redimensionarComponentes();
+});
+
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        if (!jogoConcluido) redimensionarComponentes();
+    }, 200);
+});
+
+// ==================== INICIALIZAÇÃO ====================
+function inicializarJogo() {
+    numDiscos = parseInt(inputNumDiscos.value, 10) || 3;
+    if (numDiscos < 3) numDiscos = 3;
+    if (numDiscos > 10) numDiscos = 10;
+    inputNumDiscos.value = numDiscos;
+
+    pilhas = { A: [], B: [], C: [] };
+    for (let i = numDiscos; i >= 1; i--) pilhas.A.push(i);
+
+    pinoSelecionado = null;
     movimentos = 0;
-    document.getElementById("contador-movimentos").innerText = "0";
-    
-    const minMovimentos = Math.pow(2, totalDiscos) - 1;
-    document.getElementById("objetivo-minimo").innerText = minMovimentos;
-
-    estadoDoJogo = { A: [], B: [], C: [] };
-    for (let i = totalDiscos; i > 0; i--) {
-        estadoDoJogo.A.push(i);
-    }
-
+    jogoConcluido = false;
+    historicoMovimentos = [];
     pararCronometro();
     segundos = 0;
-    document.getElementById("segundos").innerText = "0";
-    document.getElementById("display-tempo").style.display = querCronometro ? "block" : "none";
-    
-    pinoOrigem = null;
-    jogoAtivo = true;
-    desenharDiscos();
-    
-    // --- NOVIDADE: Chama o ajuste de tela sempre que o jogo reinicia ---
-    ajustarResponsividade();
+    spanSegundos.textContent = '0';
+
+    atualizarObjetivo();
+    atualizarContador();
+    atualizarCronometroDisplay();
+    renderizarTodosPinos();
+    vitoriaOverlay.classList.remove('mostrar');
 }
 
-function clicarPino(nomeDoPino) {
-    if (!jogoAtivo) return;
+function atualizarObjetivo() {
+    const minimo = Math.pow(2, numDiscos) - 1;
+    objetivoMinimo.textContent = minimo;
+}
 
-    if (pinoOrigem === null) {
-        if (estadoDoJogo[nomeDoPino].length > 0) {
-            pinoOrigem = nomeDoPino;
-            document.getElementById("pino" + pinoOrigem).classList.add("selecionado");
-        }
+function atualizarContador() {
+    contadorMovimentos.textContent = movimentos;
+}
+
+function atualizarCronometroDisplay() {
+    if (checkboxCronometro.checked) {
+        displayTempo.style.display = 'block';
+        spanSegundos.textContent = segundos;
     } else {
-        let pinoDestino = nomeDoPino;
-        if (pinoOrigem !== pinoDestino) {
-            let discoMovido = estadoDoJogo[pinoOrigem][estadoDoJogo[pinoOrigem].length - 1];
-            let topoDestino = estadoDoJogo[pinoDestino][estadoDoJogo[pinoDestino].length - 1];
-
-            if (estadoDoJogo[pinoDestino].length === 0 || discoMovido < topoDestino) {
-                estadoDoJogo[pinoOrigem].pop();
-                estadoDoJogo[pinoDestino].push(discoMovido);
-                
-                movimentos++;
-                document.getElementById("contador-movimentos").innerText = movimentos;
-
-                if (document.getElementById("usarCronometro").checked) iniciarCronometro();
-            } else {
-                mostrarNotificacao("Movimento Inválido!");
-            }
-        }
-        pinoOrigem = null;
-        desenharDiscos();
-        verificarVitoria();
-    }
-}
-
-function verificarVitoria() {
-    const totalDiscos = parseInt(document.getElementById("numDiscos").value);
-    if (estadoDoJogo.C.length === totalDiscos) {
-        pararCronometro();
-        jogoAtivo = false;
-        mostrarNotificacao(`Você venceu em ${movimentos} movimentos e ${segundos} segundos!`);
-    }
-}
-
-// --- FUNÇÕES VISUAIS E DE TEMPO ---
-function desenharDiscos() {
-    for (let nomeDoPino in estadoDoJogo) {
-        let elementoPino = document.getElementById("pino" + nomeDoPino);
-        elementoPino.innerHTML = "";
-        elementoPino.classList.remove("selecionado");
-        
-        estadoDoJogo[nomeDoPino].forEach(tamanho => {
-            let disco = document.createElement("div");
-            disco.className = "disco";
-            disco.style.width = (tamanho * 25 + 20) + "px"; 
-            
-            const cores = ["#e74c3c", "#f1c40f", "#2ecc71", "#3498db", "#9b59b6", "#e67e22"];
-            disco.style.backgroundColor = cores[tamanho % cores.length];
-
-            elementoPino.appendChild(disco);
-        });
+        displayTempo.style.display = 'none';
     }
 }
 
 function iniciarCronometro() {
-    if (intervaloCronometro) return;
-    intervaloCronometro = setInterval(() => {
+    if (!checkboxCronometro.checked || cronometroAtivo || jogoConcluido) return;
+    cronometroAtivo = true;
+    atualizarCronometroDisplay();
+    timerInterval = setInterval(() => {
         segundos++;
-        document.getElementById("segundos").innerText = segundos;
+        spanSegundos.textContent = segundos;
     }, 1000);
 }
 
 function pararCronometro() {
-    clearInterval(intervaloCronometro);
-    intervaloCronometro = null;
+    cronometroAtivo = false;
+    clearInterval(timerInterval);
+    timerInterval = null;
 }
 
-// --- A MÁGICA DA RESPONSIVIDADE (NOVO) ---
-function ajustarResponsividade() {
-    const tabuleiro = document.getElementById('tabuleiro');
-    const conteiner = document.getElementById('container-tabuleiro');
-    const larguraTela = window.innerWidth || document.documentElement.clientWidth;
-    const totalDiscos = parseInt(document.getElementById("numDiscos").value);
-    
-    const larguraDeUmPino = (totalDiscos * 25 + 20) + 40;
-    const larguraTotalDoJogo = (larguraDeUmPino * 3) + 140;
+// ==================== RENDERIZAÇÃO ====================
+function renderizarPino(nomePino) {
+    const pinoEl = document.getElementById('pino' + nomePino);
+    pinoEl.querySelectorAll('.disco').forEach(d => d.remove());
 
-    // Se a tela do aparelho for menor que o tamanho do jogo...
-    if (larguraTela < larguraTotalDoJogo) {
-        // Reduz o tamanho do tabuleiro para caber na tela perfeitamente!
-        const escala = larguraTela / larguraTotalDoJogo;
-        tabuleiro.style.transform = `scale(${escala})`;
-        tabuleiro.style.transformOrigin = "top center";
-        const alturaOriginal = tabuleiro.offsetHeight;
-        tabuleiro.style.height = (alturaOriginal * escala) + "px";
+    pilhas[nomePino].forEach((tamanho) => {
+        const disco = document.createElement('div');
+        disco.className = 'disco';
+        disco.dataset.tamanho = tamanho;
+        disco.dataset.pino = nomePino;
+        const largura = 30 + tamanho * 18;
+        disco.style.width = largura + 'px';
+        disco.style.backgroundColor = DISC_COLORS[(tamanho - 1) % DISC_COLORS.length];
+        disco.draggable = true;
+        disco.addEventListener('dragstart', handleDragStart);
+        disco.addEventListener('dragend', handleDragEnd);
+        pinoEl.appendChild(disco);
+    });
+
+    // Acessibilidade: descreve o estado atual do pino para leitores de tela
+    const qtd = pilhas[nomePino].length;
+    pinoEl.setAttribute('aria-label', `Pino ${nomePino}, ${qtd} disco${qtd === 1 ? '' : 's'}`);
+}
+
+function renderizarTodosPinos() {
+    renderizarPino('A');
+    renderizarPino('B');
+    renderizarPino('C');
+    document.querySelectorAll('.pino').forEach(p => p.classList.remove('selecionado'));
+    pinoSelecionado = null;
+    redimensionarComponentes();
+}
+
+// ==================== REGRAS DO JOGO ====================
+function movimentoValido(origem, destino) {
+    if (pilhas[origem].length === 0) return false;
+    if (pilhas[destino].length === 0) return true;
+    return pilhas[origem].slice(-1)[0] < pilhas[destino].slice(-1)[0];
+}
+
+function executarMovimento(origem, destino) {
+    const disco = pilhas[origem].pop();
+    pilhas[destino].push(disco);
+    movimentos++;
+    historicoMovimentos.push({ origem, destino, disco });
+    atualizarContador();
+    renderizarTodosPinos();
+
+    const pinoDest = document.getElementById('pino' + destino);
+    pinoDest.style.animation = 'none';
+    pinoDest.offsetHeight; // força reflow para reiniciar a animação
+    pinoDest.style.animation = 'vibrar 0.3s ease-out';
+    setTimeout(() => { pinoDest.style.animation = ''; }, 300);
+}
+
+function handlePinoClick(nomePino) {
+    if (jogoConcluido) return;
+
+    if (pinoSelecionado === null) {
+        if (pilhas[nomePino].length === 0) {
+            mostrarNotificacao('Pino vazio! Escolha um pino com discos.', 'aviso');
+            return;
+        }
+        pinoSelecionado = nomePino;
+        document.getElementById('pino' + nomePino).classList.add('selecionado');
+        iniciarCronometro();
+        return;
+    }
+
+    if (pinoSelecionado === nomePino) {
+        document.getElementById('pino' + nomePino).classList.remove('selecionado');
+        pinoSelecionado = null;
+        return;
+    }
+
+    const origem = pinoSelecionado;
+    const destino = nomePino;
+
+    if (movimentoValido(origem, destino)) {
+        executarMovimento(origem, destino);
+        document.getElementById('pino' + origem).classList.remove('selecionado');
+        pinoSelecionado = null;
+        verificarVitoria();
+        return;
+    }
+
+    // Movimento inválido: limpa a seleção anterior e, se o pino clicado
+    // tiver discos, já o aproveita como nova origem (evita "travar" o jogo).
+    mostrarNotificacao('❌ Movimento inválido!', 'erro');
+    document.getElementById('pino' + origem).classList.remove('selecionado');
+    if (pilhas[destino].length > 0) {
+        pinoSelecionado = destino;
+        document.getElementById('pino' + destino).classList.add('selecionado');
     } else {
-        // Se a tela for grande (PC), o jogo fica no tamanho original
-        tabuleiro.style.transform = "scale(1)";
-        conteiner.style.height = "auto";
+        pinoSelecionado = null;
     }
 }
-// --- SISTEMA DE NOTIFICAÇÃO ---
-function mostrarNotificacao(mensagem) {
-    const notif = document.getElementById("notificacao");
-    notif.innerText = mensagem;
-    notif.classList.add("mostrar");
 
-    // Removemos qualquer ouvinte de clique antigo por precaução
-    document.removeEventListener('click', esconderNotificacao);
-    
-    // Usamos um pequeno atraso antes de "ligar" o clique na tela.
-    // Se não fizermos isso, o mesmo clique que te fez errar a jogada vai fechar a notificação instantaneamente!
-    setTimeout(() => {
-        document.addEventListener('click', esconderNotificacao);
-    }, 100);
+// Desfazer com penalidade de +1 movimento (botão "Voltar")
+function voltarJogada() {
+    if (jogoConcluido || historicoMovimentos.length === 0) {
+        mostrarNotificacao('Nada para voltar!', 'aviso');
+        return;
+    }
+    const ultimo = historicoMovimentos.pop();
+    pilhas[ultimo.destino].pop();
+    pilhas[ultimo.origem].push(ultimo.disco);
+    movimentos++; // penalidade
+    atualizarContador();
+    renderizarTodosPinos();
+    mostrarNotificacao('↩ Voltar (+1 movimento)', 'info');
 }
 
-function esconderNotificacao() {
-    const notif = document.getElementById("notificacao");
-    notif.classList.remove("mostrar");
-    
-    // Desliga o clique na tela para não ficar gastando memória à toa
-    document.removeEventListener('click', esconderNotificacao);
+// Desfazer sem penalidade (atalho Ctrl+Z)
+function desfazerMovimento() {
+    if (jogoConcluido || historicoMovimentos.length === 0) return;
+    const ultimo = historicoMovimentos.pop();
+    pilhas[ultimo.destino].pop();
+    pilhas[ultimo.origem].push(ultimo.disco);
+    movimentos--;
+    atualizarContador();
+    renderizarTodosPinos();
+    mostrarNotificacao('↩ Movimento desfeito', 'info');
 }
 
-// Fica prestando atenção: Se o jogador virar o celular deitado, reajusta a tela!
-window.addEventListener('resize', ajustarResponsividade);
+function verificarVitoria() {
+    if (pilhas.C.length === numDiscos) {
+        jogoConcluido = true;
+        pararCronometro();
+        const minimo = Math.pow(2, numDiscos) - 1;
+        let mensagem = `Completado em ${movimentos} movimentos`;
+        if (movimentos === minimo) mensagem += ' ⭐ Solução perfeita!';
+        if (cronometroAtivo || segundos > 0) mensagem += ` | Tempo: ${segundos}s`;
+        vitoriaMensagem.textContent = mensagem;
+        vitoriaOverlay.classList.add('mostrar');
+        criarConfete();
+    }
+}
 
-// Garante que o jogo só inicie depois que o HTML carregar
-window.addEventListener('DOMContentLoaded', reiniciarJogo);
+// ==================== NOTIFICAÇÕES ====================
+let notificacaoTimeout;
+function mostrarNotificacao(mensagem, tipo = 'info') {
+    clearTimeout(notificacaoTimeout);
+    notificacao.textContent = mensagem;
+    notificacao.className = 'mostrar';
+
+    if (tipo === 'erro') {
+        notificacao.style.background = 'linear-gradient(135deg, #c0392b, #e74c3c)';
+    } else if (tipo === 'vitoria') {
+        notificacao.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+    } else if (tipo === 'aviso') {
+        notificacao.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
+    } else {
+        notificacao.style.background = 'linear-gradient(135deg, #1a1a2e, #0f3460)';
+    }
+
+    notificacaoTimeout = setTimeout(() => {
+        notificacao.classList.remove('mostrar');
+    }, 2500);
+}
+
+// ==================== CONFETE ====================
+function criarConfete() {
+    const colors = ['#e94560', '#f5c518', '#16c79a', '#48dbfb', '#ff9ff3', '#55efc4'];
+    for (let i = 0; i < 40; i++) {
+        const confete = document.createElement('div');
+        confete.style.cssText = `
+            position: fixed;
+            width: ${Math.random() * 10 + 6}px;
+            height: ${Math.random() * 10 + 6}px;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+            left: ${Math.random() * 100}vw;
+            top: -20px;
+            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+            z-index: 3000;
+            pointer-events: none;
+            animation: cairConfete ${Math.random() * 2 + 2}s linear forwards;
+        `;
+        document.body.appendChild(confete);
+        setTimeout(() => confete.remove(), 3000);
+    }
+}
+
+// ==================== TUTORIAL ====================
+const passosTutorial = [
+    { titulo: '🎯 Objetivo', texto: 'Mova todos os discos do Pino A para o Pino C, sem colocar um disco maior sobre um menor.' },
+    { titulo: '👆 Selecionar', texto: 'Clique em um pino para selecionar o disco do topo. Ele ficará azul brilhante.' },
+    { titulo: '👉 Mover', texto: 'Clique em outro pino para mover o disco. Você também pode arrastar os discos!' },
+    { titulo: '↩ Voltar', texto: 'Use o botão Voltar para desfazer uma jogada (custa +1 movimento). O atalho Ctrl+Z desfaz sem custo extra.' },
+    { titulo: '⏱ Tempo', texto: 'Ative o Cronômetro se quiser desafiar a velocidade. O objetivo mínimo está na tela.' },
+];
+let passoTutorialAtual = 0;
+
+function abrirTutorial() {
+    passoTutorialAtual = 0;
+    mostrarPassoTutorial();
+    tutorialOverlay.classList.add('mostrar');
+}
+
+function fecharTutorial() {
+    tutorialOverlay.classList.remove('mostrar');
+}
+
+function mostrarPassoTutorial() {
+    const passo = passosTutorial[passoTutorialAtual];
+    tutorialTitulo.textContent = passo.titulo;
+    tutorialTexto.textContent = passo.texto;
+    tutorialPasso.textContent = `Passo ${passoTutorialAtual + 1} de ${passosTutorial.length}`;
+}
+
+btnTutorial.addEventListener('click', abrirTutorial);
+btnFecharTutorial.addEventListener('click', fecharTutorial);
+btnProximoTutorial.addEventListener('click', () => {
+    passoTutorialAtual = (passoTutorialAtual + 1) % passosTutorial.length;
+    mostrarPassoTutorial();
+});
+
+// ==================== ARRASTAR E SOLTAR ====================
+let discoArrastado = null;
+
+function handleDragStart(e) {
+    if (jogoConcluido) { e.preventDefault(); return; }
+    discoArrastado = this;
+    this.style.opacity = '0.6';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.tamanho);
+    iniciarCronometro();
+}
+
+function handleDragEnd() {
+    if (discoArrastado) {
+        discoArrastado.style.opacity = '1';
+        discoArrastado = null;
+    }
+    document.querySelectorAll('.pino').forEach(p => p.classList.remove('drag-over'));
+}
+
+document.querySelectorAll('.pino').forEach(pino => {
+    // Clique do mouse / toque
+    pino.addEventListener('click', () => handlePinoClick(pino.dataset.pino));
+
+    // Suporte a teclado: Enter ou Espaço selecionam/movem o pino focado
+    pino.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handlePinoClick(pino.dataset.pino);
+        }
+    });
+
+    pino.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        pino.classList.add('drag-over');
+    });
+    pino.addEventListener('dragleave', () => pino.classList.remove('drag-over'));
+    pino.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        if (!discoArrastado) return;
+
+        const origem = discoArrastado.dataset.pino;
+        const destino = this.dataset.pino;
+
+        if (origem === destino) {
+            discoArrastado.style.opacity = '1';
+            discoArrastado = null;
+            return;
+        }
+
+        const topoOrigem = pilhas[origem].slice(-1)[0];
+        const discoTamanho = parseInt(discoArrastado.dataset.tamanho, 10);
+
+        if (topoOrigem !== discoTamanho) {
+            mostrarNotificacao('Apenas o disco do topo pode ser movido!', 'aviso');
+            discoArrastado.style.opacity = '1';
+            discoArrastado = null;
+            return;
+        }
+
+        if (movimentoValido(origem, destino)) {
+            executarMovimento(origem, destino);
+            verificarVitoria();
+        } else {
+            mostrarNotificacao('❌ Movimento inválido!', 'erro');
+        }
+
+        discoArrastado.style.opacity = '1';
+        discoArrastado = null;
+    });
+});
+
+// ==================== EVENTOS GERAIS ====================
+btnNovoJogo.addEventListener('click', () => {
+    inicializarJogo();
+    mostrarNotificacao('🔄 Novo jogo!', 'info');
+});
+btnJogarNovamente.addEventListener('click', () => {
+    inicializarJogo();
+    mostrarNotificacao('Boa sorte!', 'info');
+});
+btnVoltar.addEventListener('click', voltarJogada);
+inputNumDiscos.addEventListener('change', inicializarJogo);
+checkboxCronometro.addEventListener('change', () => {
+    if (!checkboxCronometro.checked) pararCronometro();
+    atualizarCronometroDisplay();
+});
+
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        desfazerMovimento();
+    }
+    // Atalho "R" para reiniciar, mas só quando o foco não está em um campo de texto
+    if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) {
+        const tag = document.activeElement.tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+            inicializarJogo();
+        }
+    }
+});
+
+// ==================== SERVICE WORKER ====================
+let novoWorker;
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+        .then(registro => {
+            console.log('✅ SW registrado');
+            registro.addEventListener('updatefound', () => {
+                novoWorker = registro.installing;
+                novoWorker.addEventListener('statechange', () => {
+                    if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        mostrarAvisoAtualizacao();
+                    }
+                });
+            });
+        })
+        .catch(erro => console.log('Erro SW:', erro));
+
+    let atualizando = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (atualizando) return;
+        atualizando = true;
+        window.location.reload();
+    });
+}
+
+function mostrarAvisoAtualizacao() {
+    notificacao.innerHTML = '';
+    notificacao.textContent = '🔄 Nova versão disponível! ';
+
+    const btnAtualizar = document.createElement('button');
+    btnAtualizar.textContent = 'Atualizar';
+    btnAtualizar.style.cssText = 'margin-top:8px;padding:8px 16px;background:#2ecc71;border:none;border-radius:20px;color:#fff;font-weight:bold;cursor:pointer;';
+    btnAtualizar.addEventListener('click', () => {
+        if (novoWorker) novoWorker.postMessage({ type: 'SKIP_WAITING' });
+    });
+
+    notificacao.appendChild(document.createElement('br'));
+    notificacao.appendChild(btnAtualizar);
+    notificacao.classList.add('mostrar');
+}
+
+// ==================== INÍCIO ====================
+inicializarJogo();
+atualizarCronometroDisplay();
