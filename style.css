@@ -451,37 +451,6 @@ body.tema-claro #notificacao {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 2px var(--shadow-azul);
 }
 
-.btn-tema {
-    background: #444;
-    color: #fff;
-    font-size: 1.2rem;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    padding: 0;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.btn-tema:hover {
-    background: #333;
-    transform: scale(1.1);
-}
-
-body.tema-claro .btn-tema {
-    background: #f5c518;
-    color: #1a1a2e;
-    box-shadow: 0 4px 15px rgba(245, 197, 24, 0.4);
-}
-
-body.tema-claro .btn-tema:hover {
-    background: #e0b010;
-}
 
 body.tema-claro .pino:hover {
     background: rgba(255, 255, 255, 0.95);
@@ -499,3 +468,25 @@ body.tema-claro #estatisticas span {
 body.tema-claro #display-tempo span {
     color: #0e8f6e;
 }
+
+/* Menu de tema (mesmo visual do campo de discos) */
+#selTema {
+    padding: 10px 12px;
+    border-radius: 25px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 15, 26, 0.8);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+#selTema:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 15px var(--shadow-azul); }
+#selTema option { background: #1a1a2e; color: #fff; }
+
+body.tema-claro #selTema {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1a1a2e;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+body.tema-claro #selTema option { background: #fff; color: #1a1a2e; }

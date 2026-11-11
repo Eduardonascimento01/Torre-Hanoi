@@ -509,38 +509,23 @@ inicializarJogo();
 atualizarCronometroDisplay();
 
 // ==================== TEMA CLARO / ESCURO ====================
-const btnTema = document.getElementById('btnTema');
+const selTema = document.getElementById('selTema');
 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 
-function aplicarTema(claro) {
+function aplicarTema(tema) {
+    const claro = tema === 'claro';
     document.body.classList.toggle('tema-claro', claro);
-    if (btnTema) {
-        btnTema.textContent = claro ? '🌙' : '☀️';
-    }
-    if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', claro ? '#f4f6fb' : '#1a1a2e');
-    }
-    try {
-        localStorage.setItem('hanoi-tema', claro ? 'claro' : 'escuro');
-    } catch (e) {
-        // localStorage falhou
-    }
+    if (selTema) selTema.value = claro ? 'claro' : 'escuro';
+    if (metaThemeColor) metaThemeColor.setAttribute('content', claro ? '#f4f6fb' : '#1a1a2e');
 }
 
-if (btnTema) {
-    btnTema.addEventListener('click', () => {
-        const ehClaro = !document.body.classList.contains('tema-claro');
-        aplicarTema(ehClaro);
+if (selTema) {
+    selTema.addEventListener('change', () => {
+        aplicarTema(selTema.value);
+        try { localStorage.setItem('hanoi-tema', selTema.value); } catch (e) { /* sem armazenamento: vale só nesta visita */ }
     });
 }
 
-try {
-    const temaSalvo = localStorage.getItem('hanoi-tema');
-    if (temaSalvo === 'claro') {
-        aplicarTema(true);
-    } else {
-        aplicarTema(false);
-    }
-} catch (e) {
-    aplicarTema(false);
-}
+let temaSalvo = 'escuro';
+try { temaSalvo = localStorage.getItem('hanoi-tema') || 'escuro'; } catch (e) { /* segue no escuro */ }
+aplicarTema(temaSalvo);
