@@ -284,6 +284,8 @@ button:active { transform: scale(0.95) !important; }
     #configuracoes button, #configuracoes .btn-tutorial { padding: 8px 14px; font-size: 0.85rem; }
     .btn-tutorial { width: 36px; height: 36px; font-size: 1rem; }
     #numDiscos { width: 55px; padding: 10px 4px; font-size: 1rem; }
+    #estatisticas { margin: 0 10px; padding: 8px 14px; gap: 4px 6px; font-size: 0.9rem; border-radius: 20px; }
+    #estatisticas span { font-size: 1.05rem; }
 
     #tabuleiro { gap: 10px; min-height: 250px; }
     .pino { border-radius: 12px; padding-bottom: 20px; }
@@ -315,3 +317,68 @@ button:active { transform: scale(0.95) !important; }
 @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+/* ================= DISCOS QUE CABEM NO PINO (telas estreitas) =================
+ * O script define a largura dos discos em px. Quando o pino fica mais estreito que o
+ * maior disco (ex.: celular com muitos discos), estes limites encolhem todos os discos
+ * na mesma proporcao, para o maior ocupar no maximo 92% do pino. Em telas largas os
+ * limites nao entram em acao. */
+/* 3 discos */
+#tabuleiro:has(.disco[data-tamanho="3"]):not(:has(.disco[data-tamanho="4"])) .disco[data-tamanho="1"] { max-width: 52.57%; }
+#tabuleiro:has(.disco[data-tamanho="3"]):not(:has(.disco[data-tamanho="4"])) .disco[data-tamanho="2"] { max-width: 72.29%; }
+#tabuleiro:has(.disco[data-tamanho="3"]):not(:has(.disco[data-tamanho="4"])) .disco[data-tamanho="3"] { max-width: 92.00%; }
+/* 4 discos */
+#tabuleiro:has(.disco[data-tamanho="4"]):not(:has(.disco[data-tamanho="5"])) .disco[data-tamanho="1"] { max-width: 43.29%; }
+#tabuleiro:has(.disco[data-tamanho="4"]):not(:has(.disco[data-tamanho="5"])) .disco[data-tamanho="2"] { max-width: 59.53%; }
+#tabuleiro:has(.disco[data-tamanho="4"]):not(:has(.disco[data-tamanho="5"])) .disco[data-tamanho="3"] { max-width: 75.76%; }
+#tabuleiro:has(.disco[data-tamanho="4"]):not(:has(.disco[data-tamanho="5"])) .disco[data-tamanho="4"] { max-width: 92.00%; }
+/* 5 discos */
+#tabuleiro:has(.disco[data-tamanho="5"]):not(:has(.disco[data-tamanho="6"])) .disco[data-tamanho="1"] { max-width: 36.80%; }
+#tabuleiro:has(.disco[data-tamanho="5"]):not(:has(.disco[data-tamanho="6"])) .disco[data-tamanho="2"] { max-width: 50.60%; }
+#tabuleiro:has(.disco[data-tamanho="5"]):not(:has(.disco[data-tamanho="6"])) .disco[data-tamanho="3"] { max-width: 64.40%; }
+#tabuleiro:has(.disco[data-tamanho="5"]):not(:has(.disco[data-tamanho="6"])) .disco[data-tamanho="4"] { max-width: 78.20%; }
+#tabuleiro:has(.disco[data-tamanho="5"]):not(:has(.disco[data-tamanho="6"])) .disco[data-tamanho="5"] { max-width: 92.00%; }
+/* 6 discos */
+#tabuleiro:has(.disco[data-tamanho="6"]):not(:has(.disco[data-tamanho="7"])) .disco[data-tamanho="1"] { max-width: 32.00%; }
+#tabuleiro:has(.disco[data-tamanho="6"]):not(:has(.disco[data-tamanho="7"])) .disco[data-tamanho="2"] { max-width: 44.00%; }
+#tabuleiro:has(.disco[data-tamanho="6"]):not(:has(.disco[data-tamanho="7"])) .disco[data-tamanho="3"] { max-width: 56.00%; }
+#tabuleiro:has(.disco[data-tamanho="6"]):not(:has(.disco[data-tamanho="7"])) .disco[data-tamanho="4"] { max-width: 68.00%; }
+#tabuleiro:has(.disco[data-tamanho="6"]):not(:has(.disco[data-tamanho="7"])) .disco[data-tamanho="5"] { max-width: 80.00%; }
+#tabuleiro:has(.disco[data-tamanho="6"]):not(:has(.disco[data-tamanho="7"])) .disco[data-tamanho="6"] { max-width: 92.00%; }
+/* 7 discos */
+#tabuleiro:has(.disco[data-tamanho="7"]):not(:has(.disco[data-tamanho="8"])) .disco[data-tamanho="1"] { max-width: 28.31%; }
+#tabuleiro:has(.disco[data-tamanho="7"]):not(:has(.disco[data-tamanho="8"])) .disco[data-tamanho="2"] { max-width: 38.92%; }
+#tabuleiro:has(.disco[data-tamanho="7"]):not(:has(.disco[data-tamanho="8"])) .disco[data-tamanho="3"] { max-width: 49.54%; }
+#tabuleiro:has(.disco[data-tamanho="7"]):not(:has(.disco[data-tamanho="8"])) .disco[data-tamanho="4"] { max-width: 60.15%; }
+#tabuleiro:has(.disco[data-tamanho="7"]):not(:has(.disco[data-tamanho="8"])) .disco[data-tamanho="5"] { max-width: 70.77%; }
+#tabuleiro:has(.disco[data-tamanho="7"]):not(:has(.disco[data-tamanho="8"])) .disco[data-tamanho="6"] { max-width: 81.38%; }
+#tabuleiro:has(.disco[data-tamanho="7"]):not(:has(.disco[data-tamanho="8"])) .disco[data-tamanho="7"] { max-width: 92.00%; }
+/* 8 discos */
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="1"] { max-width: 25.38%; }
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="2"] { max-width: 34.90%; }
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="3"] { max-width: 44.41%; }
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="4"] { max-width: 53.93%; }
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="5"] { max-width: 63.45%; }
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="6"] { max-width: 72.97%; }
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="7"] { max-width: 82.48%; }
+#tabuleiro:has(.disco[data-tamanho="8"]):not(:has(.disco[data-tamanho="9"])) .disco[data-tamanho="8"] { max-width: 92.00%; }
+/* 9 discos */
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="1"] { max-width: 23.00%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="2"] { max-width: 31.62%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="3"] { max-width: 40.25%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="4"] { max-width: 48.88%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="5"] { max-width: 57.50%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="6"] { max-width: 66.12%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="7"] { max-width: 74.75%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="8"] { max-width: 83.38%; }
+#tabuleiro:has(.disco[data-tamanho="9"]):not(:has(.disco[data-tamanho="10"])) .disco[data-tamanho="9"] { max-width: 92.00%; }
+/* 10 discos */
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="1"] { max-width: 21.03%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="2"] { max-width: 28.91%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="3"] { max-width: 36.80%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="4"] { max-width: 44.69%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="5"] { max-width: 52.57%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="6"] { max-width: 60.46%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="7"] { max-width: 68.34%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="8"] { max-width: 76.23%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="9"] { max-width: 84.11%; }
+#tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="10"] { max-width: 92.00%; }
