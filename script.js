@@ -507,3 +507,40 @@ function mostrarAvisoAtualizacao() {
 // ==================== INÍCIO ====================
 inicializarJogo();
 atualizarCronometroDisplay();
+
+// ==================== TEMA CLARO / ESCURO ====================
+const btnTema = document.getElementById('btnTema');
+const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
+function aplicarTema(claro) {
+    document.body.classList.toggle('tema-claro', claro);
+    if (btnTema) {
+        btnTema.textContent = claro ? '🌙' : '☀️';
+    }
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', claro ? '#f4f6fb' : '#1a1a2e');
+    }
+    try {
+        localStorage.setItem('hanoi-tema', claro ? 'claro' : 'escuro');
+    } catch (e) {
+        // localStorage falhou
+    }
+}
+
+if (btnTema) {
+    btnTema.addEventListener('click', () => {
+        const ehClaro = !document.body.classList.contains('tema-claro');
+        aplicarTema(ehClaro);
+    });
+}
+
+try {
+    const temaSalvo = localStorage.getItem('hanoi-tema');
+    if (temaSalvo === 'claro') {
+        aplicarTema(true);
+    } else {
+        aplicarTema(false);
+    }
+} catch (e) {
+    aplicarTema(false);
+}

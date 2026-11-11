@@ -382,3 +382,120 @@ button:active { transform: scale(0.95) !important; }
 #tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="8"] { max-width: 76.23%; }
 #tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="9"] { max-width: 84.11%; }
 #tabuleiro:has(.disco[data-tamanho="10"]) .disco[data-tamanho="10"] { max-width: 92.00%; }
+
+/* ===== TEMA CLARO ===== */
+body.tema-claro {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --pin: #b08a9a;
+    background: linear-gradient(135deg, #f4f6fb 0%, #e6ecf7 50%, #dde6f5 100%);
+    color: #1a1a2e;
+}
+
+body.tema-claro::before {
+    display: none;
+}
+
+body.tema-claro #configuracoes {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+body.tema-claro #configuracoes label {
+    color: #1a1a2e;
+}
+
+body.tema-claro #numDiscos {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1a1a2e;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.tema-claro #estatisticas {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.tema-claro #display-tempo {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.tema-claro .pino {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+body.tema-claro .tutorial-box {
+    background: #ffffff;
+    color: #1a1a2e;
+}
+
+body.tema-claro .tutorial-box p {
+    color: #444;
+}
+
+body.tema-claro #vitoria-box {
+    background: #ffffff;
+}
+
+body.tema-claro #vitoria-box p {
+    color: #444;
+}
+
+body.tema-claro #notificacao {
+    background: linear-gradient(135deg, #ffffff, #e6ecf7);
+    color: #1a1a2e;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 2px var(--shadow-azul);
+}
+
+.btn-tema {
+    background: #444;
+    color: #fff;
+    font-size: 1.2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.btn-tema:hover {
+    background: #333;
+    transform: scale(1.1);
+}
+
+body.tema-claro .btn-tema {
+    background: #f5c518;
+    color: #1a1a2e;
+    box-shadow: 0 4px 15px rgba(245, 197, 24, 0.4);
+}
+
+body.tema-claro .btn-tema:hover {
+    background: #e0b010;
+}
+
+body.tema-claro .pino:hover {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+body.tema-claro .pino.selecionado,
+body.tema-claro .pino.drag-over {
+    background: rgba(52, 152, 219, 0.15);
+}
+
+body.tema-claro #estatisticas span {
+    color: #b7791f;
+}
+
+body.tema-claro #display-tempo span {
+    color: #0e8f6e;
+}

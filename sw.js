@@ -1,4 +1,4 @@
-const CACHE_NAME = 'torre-hanoi-v6';
+const CACHE_NAME = 'torre-hanoi-v7';
 const urlsToCache = [
     './',
     './index.html',
